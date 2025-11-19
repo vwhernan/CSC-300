@@ -246,68 +246,77 @@ public:
 
 int main()
 {
-    string enteredPassword;
-    int menuChoice;
-    int totalMoney;
+    string enteredPassword; //for checking the password
+    int menuChoice; //used for selecting menu items
+    int totalMoney; //count for total money inserted
 
     //Create System
-    VendingSystem myVendingMachine;
-    Display systemDisplay;
-    Owner vincent("vincent", "PassWord");
-    myVendingMachine.setOwner(vincent);
-    Customer tester;
+    VendingSystem myVendingMachine; //creates a instance of the system
+    Display systemDisplay; //creates a instance of the display
+    Owner vincent("vincent", "PassWord"); //creats an owner which can used their paswword to access the admin menu
+    myVendingMachine.setOwner(vincent); //assigns an owenr to the vending machine
+    Customer tester; //creates a customer
 
-    //Create Items and Inventory
+    /*Create Items and Inventory -----------------------------------------
+        This would be done through the admin menu, which isnt developed yet.
+        The code below Manually creates and initializes 3 Items, and 
+        then adds them to the Systems Inventory, which is list of items
+     ---------------------------------------------------------------------*/
     Item drPepper("Dr Pepper", 10, 5);
     Item coke("Coke", 10, 20);
     Item pepsi("Pepsi", 10, 15);
-
     myVendingMachine.addItem(drPepper);
     myVendingMachine.addItem(coke);
     myVendingMachine.addItem(pepsi);
     
     
     //Start Vending Machine
-    menuChoice = systemDisplay.GetTopMenuSelection();
+    menuChoice = systemDisplay.GetTopMenuSelection(); //Main Menu
+    
+    //If user wants to buy an Item
     if (menuChoice == 1) {
+       
+       //Gets item choice based on menu postion 
        int itemChoice = systemDisplay.GetItemMenuSelection(myVendingMachine.getList());
+       
+       //Based on item choice Displays all necessary information about the item
        myVendingMachine.setSeletedItem(itemChoice);
        Item selectedItem = myVendingMachine.getSelectedItem();
        cout <<"\nSelected item: " << selectedItem.ItemToString() << endl;
        cout << "Please Enter " << selectedItem.PriceToString() << " coins" << endl;
        
+       //User adds first coin
        cout << "\n";
        tester.addCoin(selectedItem.getPrice());
        totalMoney = tester.getTotalCoins();
        myVendingMachine.vendItem(totalMoney, selectedItem.getPrice());
        
+       //User adds second coin
        cout << "\n";
        tester.addCoin(selectedItem.getPrice());
        totalMoney = tester.getTotalCoins();
        myVendingMachine.vendItem(totalMoney, selectedItem.getPrice());
        
+       //User adds third coin
        cout << "\n";
        tester.addCoin(selectedItem.getPrice());
        totalMoney = tester.getTotalCoins();
        myVendingMachine.vendItem(totalMoney, selectedItem.getPrice());
        
+       //User adds fourth coin
        cout << "\n";
        tester.addCoin(selectedItem.getPrice());
        totalMoney = tester.getTotalCoins();
        myVendingMachine.vendItem(totalMoney, selectedItem.getPrice());
        
+       //User adds fifth coin
        cout << "\n";
        tester.addCoin(selectedItem.getPrice());
        totalMoney = tester.getTotalCoins();
        myVendingMachine.vendItem(totalMoney, selectedItem.getPrice());
 
-       cout << "\n";
-       tester.addCoin(selectedItem.getPrice());
-       totalMoney = tester.getTotalCoins();
-       myVendingMachine.vendItem(totalMoney, selectedItem.getPrice());
-    
     }
-    
+    //If user is an admin or owner
     else if (menuChoice == 2) {
         vincent.checkPassword();
         if (vincent.PassWordCorrect() == true) {
