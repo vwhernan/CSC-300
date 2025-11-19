@@ -3,6 +3,7 @@ using namespace std;
 #include <iostream>
 #include <string>
 #include <list>
+#include <iterator>
 
 class Owner {
     string name;
@@ -12,33 +13,36 @@ class Owner {
 public:
     Owner() {}
     Owner(string n, string p) : name(n), Password(p), PassWordCheck(false) {}
-    
+
     bool PassWordCorrect() { return PassWordCheck; }
-    
-        void checkPassword() {
+
+    void checkPassword() {
         string temp;
-        cout << "Enter your password: " <<endl; 
+        cout << "Enter your password: " << endl;
         cin >> temp;
         if (temp == Password) { PassWordCheck = true; }
         else { PassWordCheck = false; }
     }
 
-    void updatePrice(){
-        
+    void updatePrice() {
+
     }
     void updateStock() {}
     void getCoinsNow() {}
-    
-    
+
+
 };
 
 class Customer {
-    int MoneyInserted;
+    int MoneyInserted = 0;
 
 public:
-    
-    void addCoin() {
+
+    void addCoin(int p) {
         MoneyInserted += 1;
+        if (MoneyInserted < p) {
+            cout << "Total Coins Input: " << MoneyInserted << endl;
+        }
     }
 
     void returnCoins() {
@@ -50,6 +54,10 @@ public:
         }
         cout << coinsReturned << " Coins were returned";
     }
+
+    int getTotalCoins() {
+        return MoneyInserted;
+    }
 };
 
 
@@ -60,19 +68,26 @@ class Item {
 
 public:
     Item() {}
-    Item(string n, int q, int p) : name(n), quantity(q),price(p){}
+    Item(string n, int q, int p) : name(n), quantity(q), price(p) {}
 
-    void setPrice(){}
+    void setPrice() {}
     void setQuantity() {}
-    
+
     void updateItem(string n, int q, int p) {
         name = n;
         quantity = q;
         price = p;
     }
 
-    void ItemToString() {
+    int getPrice() {
+        return price;
+    }
+    string PriceToString() {
+        return to_string(price) + " Coins";
+    }
 
+    string ItemToString() {
+        return name + " || " + to_string(price) + " Coins";
     }
 
 };
@@ -80,9 +95,6 @@ public:
 class Display {
 public:
 
-    // ---------------------------------------------
-    // TOP MENU
-    // ---------------------------------------------
     void TopMenu() {
         cout << " =================================================" << endl;
         cout << "|                                                 |" << endl;
@@ -114,6 +126,46 @@ public:
         return choice;
     }
 
+    void ItemMenu(list<Item> Inv) {
+        const int width = 49;
+        int rowCount = 1;
+        cout << " =================================================" << endl;
+        cout << "|                                                 |" << endl;
+        for (Item i : Inv) {
+            string text = to_string(rowCount) + ". "+ i.ItemToString();
+            int padding = width - text.size() - 1;
+            i.ItemToString();
+            if (padding < 0) { padding = 0; }
+            cout << "| " << text << string(padding, ' ') << "|" << endl;
+            rowCount++;
+        }
+        cout << "|                                                 |" << endl;
+        cout << " =================================================" << endl;
+    }
+
+    int GetItemMenuSelection(list<Item> Inv) {
+        int choice = 0;
+        int listSize = Inv.size();
+
+        do {
+            ItemMenu(Inv); 
+            cout << "Enter your choice or 0 to exit/cancel: ";
+
+            if (!(cin >> choice)) {
+                cout << "\nInvalid input (non-number). Please enter a number.\n\n";
+                cin.clear(); 
+                cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
+                choice = -1; 
+                continue; 
+            }
+            if (choice < 0 || choice > listSize) {
+                cout << "\nInvalid option. Please choose a number between 0 and " << listSize << ".\n\n";
+            }
+        } while (choice < 0 || choice > listSize); 
+        return choice;
+    }
+
+
 
     void displayAdminMenu() {
         cout << " =================================================" << endl;
@@ -136,11 +188,11 @@ public:
             if (choice < 1 || choice > 5) {
                 cout << "\nInvalid option. Please try again.\n\n";
                 if (std::cin.fail()) {
-                    std::cin.clear();              
-                    std::cin.ignore(10000, '\n');  
+                    std::cin.clear();
+                    std::cin.ignore(10000, '\n');
                 }
             }
-           
+
 
         } while (choice < 1 || choice > 5);
 
@@ -152,7 +204,6 @@ public:
 class VendingSystem {
     Owner systemOwner;
     list<Item> Inventory;
-    Customer customer;
     Item selectedItem;
 
 public:
@@ -167,40 +218,110 @@ public:
         cin >> temp;
         return temp;
     }
+
+    list<Item>& getList() {
+        return Inventory;
+    }
+    
+    Item getSelectedItem() {
+        return selectedItem;
+    }
+    void setSeletedItem(int i) {
+        auto it = next(Inventory.begin(), i-1);
+        selectedItem = *it;
+    }
+
+    void vendItem(int i, int p) {
+        if (i == p) {
+            cout << "Grab your item!" << endl;
+            cout << "Thank you for your Purchase!" << endl;
+        }
+
+        else if (i < p) {
+            int remaining = p - i;
+            cout << "Please insert " << to_string(remaining) << " More Coins" << endl;
+        }
+    }
 };
 
 int main()
 {
     string enteredPassword;
+    int menuChoice;
+    int totalMoney;
 
     //Create System
     VendingSystem myVendingMachine;
-    Display systemDisplay; 
-    Owner vincent("vincent", "PassWord"); 
-    myVendingMachine.setOwner(vincent); 
+    Display systemDisplay;
+    Owner vincent("vincent", "PassWord");
+    myVendingMachine.setOwner(vincent);
+    Customer tester;
+
+    //Create Items and Inventory
+    Item drPepper("Dr Pepper", 10, 5);
+    Item coke("Coke", 10, 20);
+    Item pepsi("Pepsi", 10, 15);
+
+    myVendingMachine.addItem(drPepper);
+    myVendingMachine.addItem(coke);
+    myVendingMachine.addItem(pepsi);
     
     
     //Start Vending Machine
-    int userChoice = systemDisplay.GetTopMenuSelection();
+    menuChoice = systemDisplay.GetTopMenuSelection();
+    if (menuChoice == 1) {
+       int itemChoice = systemDisplay.GetItemMenuSelection(myVendingMachine.getList());
+       myVendingMachine.setSeletedItem(itemChoice);
+       Item selectedItem = myVendingMachine.getSelectedItem();
+       cout <<"\nSelected item: " << selectedItem.ItemToString() << endl;
+       cout << "Please Enter " << selectedItem.PriceToString() << " coins" << endl;
+       
+       cout << "\n";
+       tester.addCoin(selectedItem.getPrice());
+       totalMoney = tester.getTotalCoins();
+       myVendingMachine.vendItem(totalMoney, selectedItem.getPrice());
+       
+       cout << "\n";
+       tester.addCoin(selectedItem.getPrice());
+       totalMoney = tester.getTotalCoins();
+       myVendingMachine.vendItem(totalMoney, selectedItem.getPrice());
+       
+       cout << "\n";
+       tester.addCoin(selectedItem.getPrice());
+       totalMoney = tester.getTotalCoins();
+       myVendingMachine.vendItem(totalMoney, selectedItem.getPrice());
+       
+       cout << "\n";
+       tester.addCoin(selectedItem.getPrice());
+       totalMoney = tester.getTotalCoins();
+       myVendingMachine.vendItem(totalMoney, selectedItem.getPrice());
+       
+       cout << "\n";
+       tester.addCoin(selectedItem.getPrice());
+       totalMoney = tester.getTotalCoins();
+       myVendingMachine.vendItem(totalMoney, selectedItem.getPrice());
 
-    if (userChoice == 1) {
-        cout << "User chose to see items.\n";
+       cout << "\n";
+       tester.addCoin(selectedItem.getPrice());
+       totalMoney = tester.getTotalCoins();
+       myVendingMachine.vendItem(totalMoney, selectedItem.getPrice());
+    
     }
-    else if (userChoice == 2) {
+    
+    else if (menuChoice == 2) {
         vincent.checkPassword();
         if (vincent.PassWordCorrect() == true) {
-        int adminChoice = systemDisplay.GetAdminMenuSelection();
+            int adminChoice = systemDisplay.GetAdminMenuSelection();
+            cout << "These Features Coming Soon!!" << endl;
         }
         else {
             cout << "Wrong Password." << endl;
             main();
         }
     }
-
-    return 0;
-    
-      
    
+    return 0;
+
 }
 
 //enteredPassword = myVendingMachine.AskForPassword();
